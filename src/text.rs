@@ -1,16 +1,17 @@
 use crate::context::Context;
 
+use std::{borrow::BorrowMut, ops::{Deref, DerefMut}};
 use sdl2::{rect::Rect, render::TextureQuery};
 
 #[derive(Clone, Debug)]
-pub struct Rope<'a> {
+pub struct Rope {
     length: usize,
-    left_rope: Option<&'a Rope<'a>>,
-    right_rope: Option<&'a Rope<'a>>,
+    left_rope: Option<Box<Rope>>,
+    right_rope: Option<Box<Rope>>,
     pub held_string: Option<String>
 }
 
-impl Rope<'_> {
+impl Rope {
     pub fn len(&self) -> usize {
         if self.right_rope.is_some() {
             return self.length + self.right_rope.clone().unwrap().len()
@@ -18,14 +19,14 @@ impl Rope<'_> {
         self.length
     }
 
-    pub fn append(&mut self, next_rope: &Rope) {
+    pub fn append(&mut self, next_rope: Rope) {
         self.length = self.len();
-        self.left_rope = Some(self);
-        self.right_rope = Some(next_rope);
+        self.left_rope = Some(Box::new(self.clone()));
+        self.right_rope = Some(Box::new(next_rope));
         self.held_string = None;
     }
 
-    pub fn from_string(string: String) -> Rope<'static> {
+    pub fn from_string(string: String) -> Rope {
         let mut leaves: Vec<Rope> = string
             .split(" ")
             .map(|e| Rope {
@@ -48,7 +49,7 @@ impl Rope<'_> {
                 .map(|ropes: &[Rope]| {
                     let mut to_return = ropes[0].clone();
                     if ropes.len() == 2 {
-                        to_return.append(&ropes[1].clone());
+                        to_return.append(ropes[1].clone());
                     }
                     to_return
                 })
@@ -71,16 +72,16 @@ impl Rope<'_> {
     }
 
     pub fn insert_char_at(&mut self, to_insert: char, mut index: usize) {
-        let mut current_node: &Rope<'_> = self;
-        let mut next_node: &Rope;
+        let mut current_node = self;
+        let mut next_node: Box<Rope>;
         while current_node.held_string.is_none() {
             if index >= current_node.length {
                 index -= current_node.length;
-                next_node = current_node.right_rope.unwrap();
-                current_node = next_node;
+                next_node = current_node.right_rope.clone().unwrap();
+                current_node = next_node.deref_mut();
             } else {
-                next_node = current_node.left_rope.unwrap();
-                current_node = next_node;
+                next_node = current_node.left_rope.clone().unwrap();
+                current_node = next_node.deref_mut();
             }
         }
 
