@@ -20,7 +20,7 @@ impl Rope<'_> {
 
     pub fn append(&mut self, next_rope: &Rope) {
         self.length = self.len();
-        self.left_rope = Some(self);
+        self.left_rope = Some(&self.clone());
         self.right_rope = Some(next_rope);
         self.held_string = None;
     }
