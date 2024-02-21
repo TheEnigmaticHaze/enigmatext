@@ -21,14 +21,9 @@ pub fn main() {
 
     let mut context = Context::new(settings).unwrap();
 
-    let mut my_rope = Rope::from_string("abcdef ghijklmnopqr stuvwxyz".to_string());
-    my_rope.insert_char_at('5', 5);
-
-    // my_rope.held_string = {
-    //     let mut new_str = my_rope.held_string.clone().unwrap();
-    //     new_str.insert(5, '5');
-    //     Some(new_str)
-    // };
+    let mut my_rope = Rope::from_string("01 3456789".to_string());
+    my_rope.insert_string_at("hello", 5);
+    println!("{:?}", my_rope);
 
     'running: loop {
         context.canvas.set_draw_color(context.settings.back_color);
